@@ -90,3 +90,13 @@ ggplot(data = home_sub, aes(x = SqFt, y = Price)) +
   geom_smooth(method = lm)
 ```
 
+## Model the relationship with home prices as DV
+
+`homes_lm1 <- lm(Price ~ City + Bedrooms + Bathrooms + SqFt + PricePerSqFt + Status, data = home_sub)`
+
+- ohh girl be careful with this! price per squarefoot is a redudant variable to include in this data set
+
+```{r}
+homes_lm1 <- lm(Price ~ City + Bedrooms + Bathrooms + SqFt + PricePerSqFt + Status, data = home_sub)
+```
+
