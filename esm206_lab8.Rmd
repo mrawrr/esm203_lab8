@@ -1,0 +1,92 @@
+---
+title: "esm203_lab8"
+author: "Meghna Rao"
+date: "11/15/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+# Attach Packages
+library(tidyverse)
+library(corrplot)
+library(stargazer)
+library(broom)
+library(modelsummary)
+library(here)
+```
+
+```{r}
+homes <- read.csv(here("slo_homes.csv"))
+```
+## Make a subset called `home_sub` that only contains observations (rows) where the city is:
+- San Luis Obispo
+- Arroyo Grande
+- Atascadero
+- Santa Maria-orcutt
+
+use filter to keep or exclude rows within the column `City`
+- DO NOT TYPE LIKE THIS `filter(City == c("San Luis Obispo", "Arroyo Grande", "Atascadero", "Santa Maria-Orcutt"))` because it chooses and selects things based on position. Tells it to look in each row in city column for each row to match the order here!
+
+- we want to look in every row and see if any of these options show up in any of the rows! so use `%in%`
+```{r}
+home_sub <- homes %>% 
+  filter(City %in% c("San Luis Obispo", "Arroyo Grande", "Atascadero", "Santa Maria-Orcutt"))
+```
+
+## check your data with `unique`
+I want to check `home_sub` to see what the observations are in a column.
+type in `unique(homes_sub$City)`
+
+## Find summary statistics 
+
+For home pric e based on city and sale status
+- find and return in a nice summary table the mean and st deviation of home price, grouped by city and sale status
+
+```{r}
+summary_table <- home_sub %>% 
+  group_by(City, Status) %>% 
+  summarize(mean_price = mean(Price, na.rm = TRUE), #na.rm = TRUE will sure the NA values are removed
+            sd_price = sd(Price, na.rm = TRUE))
+```
+you can add `include = FALSE` into the knittr for this code chunk so the code doesnt show
+if you don't even want the code to run add `eval = FALSE` into the code knitrr
+
+
+## Look at data
+HOw do these values compared based on different grouping variables
+forclosure prices are less than regular prices. 
+how does housing prices compare across different states
+SLO has higher mean home prices than Arroyo Grande which has higher mean home prices than atascadero
+we would want to do this for many different variables to assess how different they are from eachother. 
+
+## Exploratory graph
+
+```{r}
+ggplot(data = home_sub, aes(x = Price)) +
+  geom_density(aes(color = City, fill = City), alpha = 0.3) + # fill color and line color. color and fill are within aes (because things within aes relates to a varibale. maps varible onto an aesthetic. if its refereing to a constant, outside aes) 
+# here alpha is set to a transparecny constant of 0.3, so it is outside the aes
+  scale_x_continuous(limits = c(0, 3e6)) # changes the scale of the x axis. set limits of two endpoints within a vector
+```
+
+## Explore the relationship with visual data exploration between square footage and home price
+
+Change the point color by city and the point shape by sale status
+
+```{r, eval = FALSE}
+ggplot(data = home_sub, aes(x = SqFt, y = Price)) +
+  geom_point() + # looks like a positive linear correlation between positive correlation and home price. There is some variation in expected home prices
+  geom_smooth(method = lm) # it says use the linear lm
+# looks like a positive linear correlation between positive correlation and home price. There is some variation in expected home prices
+
+```
+There is an outlier! This data does not tell you the location of the house, so tiny homes on the ocean could be highly priced because of the location. Other reasons could be that its a small home on a big property, etc. Why does this point diverge quite a bit from what our model should be?
+
+
+```{r}
+ggplot(data = home_sub, aes(x = SqFt, y = Price)) +
+  geom_point(aes(color = City, shape = Status)) +
+  geom_smooth(method = lm)
+```
+
