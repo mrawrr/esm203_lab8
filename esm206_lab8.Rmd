@@ -97,6 +97,121 @@ ggplot(data = home_sub, aes(x = SqFt, y = Price)) +
 - ohh girl be careful with this! price per squarefoot is a redudant variable to include in this data set
 
 ```{r}
-homes_lm1 <- lm(Price ~ City + Bedrooms + Bathrooms + SqFt + PricePerSqFt + Status, data = home_sub)
+homes_lm1 <- lm(Price ~ City + Bedrooms + Bathrooms + SqFt + PricePerSqFt + Status, data = home_sub) # gen linear regression model
+
+#Make a subset that only contains the quantitative varibales
+homes_quant <- home_sub %>% 
+  select(Price:PricePerSqFt) # gives us a version of the home_sub that only contains quantitative varibles to take out categorical varibales
+
+homes_cor <- cor(homes_quant)
+homes_cor  # looking at correltiaon, anything close toa 1 like a 0.7 shows a strong positive correlation ex bathrooms and bedrooms and strongly/moderatley highly positively correlated values 
+
+corrplot(homes_cor, method = 'ellipse')
+
+# return the linear regression model by typing homes_lm1 in the console
+# the reference level for home is arroyo grand. So how to interpret categorical reference levels relative to the reference level (see lecture notes)
+# how to interpret the bedroom (numerical varible) - if everything else is the same, thats the average price decrease for every one increase in bedrooms - PROBLEM why is there a 
+# for each add 1 sq footage of the home, expect the aveage price of the house to increase by this much
+# for status, ref level is forclosure RED FLAG - model says that regular sale has lower prices than those in foreclosure.
+# be very concerned! what seems redudundant!!
 ```
 
+## How would i explore the diagnostic plots for this??
+
+`plot(homes_lm1)`
+
+```{r}
+plot(homes_lm1)
+# look at cooks distance. the measured shows that cooks distance of 0.5 and 1 is pulling a lot of weight. It is waay outside of what we would expect. also not the only place this shows up.(this is the residuals v. leverage plot). Outliers show up in scatter plot and in residuals v. leverage 
+```
+## try another model
+
+simplify the model a bit by only including the varibales for 
+- city
+- Sqft
+- Status
+
+```{r}
+homes_lm2 <- lm(Price ~ City + SqFt + Status, data = home_sub) # created a new linear model where home price is a function of city and sqft and status. and data comes from home_sub
+```
+
+We see that now, compared to a ref level of arroyo grande, SLO has a higher home price on average, Atascadero has on average a lower home price.
+SqFt and home price still have a regular price
+regular status sale, compared to a foreclosure, has a 20k higher home price compared to a for closure sale.
+
+these values are in line with what I would expect! More sound linear model, good thing we thought about our data!
+
+## compare model fit
+
+check out `summary(lm(homes_lm1))` in console
+What is the R2 mean?? 84% of the variance in home price is explained by the predictor variables in this model (city, bed, bath, sqft, pricepersqft, etc all listed coefficients)l. However there are other varibles that we would need to be able to capure 100% varibale in price. To get a higher value we need additioal variable that don't explain that.
+
+- adjusted R2 is what we just when we do multiple linear regression so we are looking at the adjusted r-squared.
+
+check out `summary(lm(homes_lm2))` in console
+
+here adjusted r-squared is ~53%
+
+how do we weight trade off between model fit and conceptual understanding!
+
+What is a quanititaive tool to ask the tradeoff being model fit and conceptual understanding
+
+**AIC** - provides a sum comparison of balance between model fit and complexity.
+- high fit and simple
+
+Find the AIC value of each model
+
+```{r}
+AIC(homes_lm1)
+AIC(homes_lm2) # lowers AIC val indicates a better fit beteen model fit and complexity. So then we would use the first model because it has a lower AIC
+# but we did not like homes_lm1!
+# there is a huge gap in model fit between R2 values of lm1 and lm2! maybe neither of these models are a good fit. back to drawing board for other potential varibales that exisit here.
+```
+
+## Try another permutaiton of this model that you think might make sense, then check out and compare the model fit, outputs and AIC values.
+
+```{r}
+homes_lm3 <- lm(Price ~ City + SqFt + Bedrooms + Status, data = home_sub)
+
+summary(lm(homes_lm3))
+```
+
+```{r}
+AIC(homes_lm1)
+AIC(homes_lm2)
+AIC(homes_lm3)
+# All the modesl are wrong!!!
+# Seems like bedrooms isnt good. Seeing a weird highly negative coefficient with bedrooms. 
+
+```
+```{r}
+homes_lm4 <- lm(Price ~ City + SqFt + PricePerSqFt + Status, data = home_sub)
+
+# price per sqft is not an independent of our dependent variable because its based on the actual home price sooo bad idea to include it in our model!
+
+summary(lm(homes_lm4))
+```
+
+```{r}
+modelsummary(homes_lm1) # if you use model summary to return model outputs of multiple models it wants you to feed it to it as a list
+
+modelsummary(homes_lm1, homes_lm2, homes_lm3) # okay now you can compare based on what is still in the model or what has been removed from the model
+```
+
+
+## Start making predicitions with this model
+
+SUe `brooms::augment()`
+
+```{r}
+homes_predicted <- augment(homes_lm1)
+```
+
+- fitted is what our models predicts it would be and it totally fails 
+
+
+Use the `predict()` function to try out your model on new scenarios that you create
+
+# MY UPDATE!!!
+
+but how to merge changes in the main branch?
